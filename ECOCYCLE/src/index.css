@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+@theme {
+  --animate-fade-in-down: fade-in-down 0.5s ease-out;
+  --animate-shimmer: shimmer 2s infinite linear;
+
+  @keyframes fade-in-down {
+    0% {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes shimmer {
+    from {
+      transform: translateX(-200%);
+    }
+
+    to {
+      transform: translateX(200%);
+    }
+  }
+}
