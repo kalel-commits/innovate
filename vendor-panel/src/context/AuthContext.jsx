@@ -18,7 +18,7 @@ export function AuthProvider({ children }) {
     const [currentUser, setCurrentUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    async function signup(email, password, name, phone) {
+    async function signup(email, password, businessName, contactPerson, businessType) {
         // 1. Create Auth User
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
@@ -26,8 +26,9 @@ export function AuthProvider({ children }) {
         // 2. Create Vendor Document
         await setDoc(doc(db, "vendors", user.uid), {
             email,
-            name,
-            phone,
+            businessName,
+            contactPerson,
+            businessType,
             role: 'vendor',
             createdAt: new Date().toISOString()
         });

@@ -5,10 +5,14 @@ import {
     signOut,
     onAuthStateChanged,
     GoogleAuthProvider,
-    signInWithPopup
+    signInWithPopup,
+    setPersistence,
+    browserLocalPersistence,
+    browserSessionPersistence,
+    sendPasswordResetEmail
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, getFirestore } from 'firebase/firestore';
-import { auth } from '../firebase'; // Assuming 'db' is exported from here or we init it
+import { auth, db } from '../firebase';
 
 const AuthContext = createContext();
 
@@ -19,7 +23,6 @@ export function useAuth() {
 export function AuthProvider({ children }) {
     const [currentUser, setCurrentUser] = useState(null);
     const [loading, setLoading] = useState(true);
-    const db = getFirestore(auth.app); // Get db instance associated with the auth app
 
     async function signup(email, password, name = '', phone = '') {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -30,15 +33,17 @@ export function AuthProvider({ children }) {
             email,
             role: 'customer',
             createdAt: new Date().toISOString(),
-            // Add other fields if needed for validation
-            name: name,
-            phone: phone
+            name: name || '',
+            phone: phone || ''
         });
 
         return user;
     }
 
-    async function login(email, password) {
+    async function login(email, password, remember = false) {
+        // Set persistence based on "Remember Me"
+        await setPersistence(auth, remember ? browserLocalPersistence : browserSessionPersistence);
+
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
@@ -59,7 +64,15 @@ export function AuthProvider({ children }) {
         return signOut(auth);
     }
 
+    function resetPassword(email) {
+        return sendPasswordResetEmail(auth, email);
+    }
+
     async function googleSignIn() {
+        // Default to local persistence for Google Sign-In, or we could make it configurable. 
+        // Usually Social Logins implicate a desire to be remembered, but let's explicit set it to LOCAL for now to be safe.
+        await setPersistence(auth, browserLocalPersistence);
+
         const provider = new GoogleAuthProvider();
         const result = await signInWithPopup(auth, provider);
         const user = result.user;
@@ -118,7 +131,8 @@ export function AuthProvider({ children }) {
         signup,
         login,
         logout,
-        googleSignIn
+        googleSignIn,
+        resetPassword
     };
 
     return (

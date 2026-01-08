@@ -11,9 +11,9 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <Routes>
+          <Route path="/auth" element={<AuthPage />} />
           <Route element={<Layout />}>
             <Route path="/" element={<LandingPage />} />
-            <Route path="/auth" element={<AuthPage />} />
             <Route
               path="/dashboard"
               element={
