@@ -4,6 +4,7 @@ import Layout from './layouts/Layout';
 import LandingPage from './pages/LandingPage';
 import AuthPage from './pages/AuthPage';
 import Dashboard from './pages/Dashboard';
+import SmartScan from './pages/SmartScan';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -19,6 +20,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/smart-scan"
+              element={
+                <ProtectedRoute>
+                  <SmartScan />
                 </ProtectedRoute>
               }
             />

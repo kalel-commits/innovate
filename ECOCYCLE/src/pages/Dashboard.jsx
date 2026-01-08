@@ -1,6 +1,6 @@
 import { useAuth } from '../context/AuthContext';
-import { BarChart3, Leaf, Recycle, MapPin, LogOut, User, Phone, Mail, X } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { BarChart3, Leaf, Recycle, MapPin, LogOut, User, Phone, Mail, X, Scan } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { getFirestore, doc, updateDoc, getDoc } from 'firebase/firestore';
 import { auth } from '../firebase'; // Ensure we import auth to get the app for firestore
@@ -126,9 +126,9 @@ export default function Dashboard() {
                     <div className="bg-gradient-to-br from-brand-red to-brand-orange rounded-xl p-4 text-white shadow-lg mb-6">
                         <div className="font-bold mb-1">New Waste?</div>
                         <div className="text-sm opacity-90 mb-3">Identify and recycle in seconds.</div>
-                        <button className="w-full py-2 bg-white text-brand-red font-bold rounded-lg text-sm hover:bg-brand-cream transition-colors">
+                        <Link to="/smart-scan" className="block w-full py-2 bg-white text-brand-red font-bold rounded-lg text-sm hover:bg-brand-cream transition-colors text-center">
                             Start Scan
-                        </button>
+                        </Link>
                     </div>
 
                     <button
@@ -151,6 +151,10 @@ export default function Dashboard() {
                         </h1>
                         <p className="text-brand-brown font-medium">Here's your environmental impact at a glance.</p>
                     </div>
+                    <Link to="/smart-scan" className="px-6 py-3 bg-brand-red text-white font-bold rounded-xl shadow-lg hover:bg-brand-brown transition-transform hover:scale-105 active:scale-95 flex items-center gap-2">
+                        <Scan className="w-5 h-5" />
+                        Start Smart Scan
+                    </Link>
                     {/* Mobile Logout */}
                     <button
                         onClick={handleLogout}
