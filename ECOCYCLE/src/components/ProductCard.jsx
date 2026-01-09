@@ -91,10 +91,42 @@ export default function ProductCard({ option, index, onImageLoad }) {
                 {/* Expanded Details */}
                 {expanded && (
                     <div className="mt-4 pt-4 border-t border-brand-brown/10 space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                        {/* Daily Use Case - Highlighted */}
+                        {option.daily_use_case && (
+                            <div className="bg-brand-orange/10 rounded-lg p-3 border border-brand-orange/20">
+                                <div className="text-xs font-bold text-brand-orange uppercase mb-1">💡 Daily Use</div>
+                                <p className="text-sm text-brand-brown">{option.daily_use_case}</p>
+                            </div>
+                        )}
+                        
                         <div>
                             <div className="text-xs font-bold text-brand-brown/60 uppercase mb-1">Processing Required</div>
                             <p className="text-sm text-brand-brown">{option.required_processing}</p>
                         </div>
+                        
+                        {/* Materials Section */}
+                        {option.materials_needed && (
+                            <div>
+                                <div className="text-xs font-bold text-brand-brown/60 uppercase mb-1">📦 Materials Needed</div>
+                                <p className="text-sm text-brand-brown">{option.materials_needed}</p>
+                            </div>
+                        )}
+                        
+                        {/* Customer Can Provide */}
+                        {option.customer_can_provide && (
+                            <div className="bg-brand-green/10 rounded-lg p-2 border border-brand-green/20">
+                                <div className="text-xs font-bold text-brand-green uppercase mb-1">✓ You Can Provide</div>
+                                <p className="text-sm text-brand-brown">{option.customer_can_provide}</p>
+                            </div>
+                        )}
+                        
+                        {/* Vendor Can Provide */}
+                        {option.vendor_can_provide && (
+                            <div className="bg-brand-red/10 rounded-lg p-2 border border-brand-red/20">
+                                <div className="text-xs font-bold text-brand-red uppercase mb-1">🏪 Vendor Can Provide</div>
+                                <p className="text-sm text-brand-brown">{option.vendor_can_provide}</p>
+                            </div>
+                        )}
                         
                         <div className="grid grid-cols-2 gap-3">
                             <div className="bg-brand-cream/30 rounded-lg p-2">
