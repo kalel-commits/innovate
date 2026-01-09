@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { analyzeWasteImage } from '../services/gemini';
 import { Upload, Camera, Loader2, ArrowRight, Leaf, DollarSign, Recycle, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import ProductCard from '../components/ProductCard';
 
 export default function SmartScan() {
     const [image, setImage] = useState(null);
@@ -232,47 +233,15 @@ export default function SmartScan() {
                             {/* Right Column: Conversion Options */}
                             <div className="space-y-6">
                                 <AnalysisCard title="Conversion Ideas">
-                                    <div className="space-y-4">
+                                    <p className="text-sm text-brand-brown/60 mb-4">Click on any product to see detailed information</p>
+                                    <div className="grid grid-cols-1 gap-4">
                                         {result.conversion_options?.map((option, idx) => (
-                                            <div key={idx} className="flex gap-4 p-4 rounded-xl border border-brand-brown/10 hover:border-brand-red/30 hover:bg-brand-cream/20 transition-colors">
-                                                <div className="w-10 h-10 rounded-full bg-brand-red/10 flex items-center justify-center text-brand-red font-bold flex-shrink-0">
-                                                    {idx + 1}
-                                                </div>
-                                                <div className="flex-1">
-                                                    <div className="flex justify-between items-start">
-                                                        <h4 className="font-bold text-brand-brown">{option.product_name}</h4>
-                                                        <span className="text-xs font-bold px-2 py-1 bg-brand-cream rounded-lg text-brand-brown/70 uppercase">
-                                                            {option.conversion_type}
-                                                        </span>
-                                                    </div>
-                                                    <p className="text-xs text-brand-brown/60 mt-1 mb-2">
-                                                        Process: {option.required_processing}
-                                                    </p>
-                                                    <div className="flex items-center gap-4 text-xs font-medium">
-                                                        <span className="text-brand-green">Profit: ₹{option.expected_profit_or_loss_inr}</span>
-                                                        <span className="text-brand-brown/50">|</span>
-                                                        <span className="text-brand-orange">Diff: {option.difficulty_level}</span>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                            <ProductCard 
+                                                key={idx} 
+                                                option={option} 
+                                                index={idx}
+                                            />
                                         ))}
-                                    </div>
-                                </AnalysisCard>
-
-                                <AnalysisCard title="AI Generation Prompts">
-                                    <div className="space-y-4">
-                                        <div className="p-3 bg-gray-50 rounded-xl border border-gray-100">
-                                            <div className="text-xs font-bold text-gray-400 uppercase mb-2">Product Visual</div>
-                                            <p className="text-xs text-gray-600 font-mono leading-relaxed select-all">
-                                                {result.image_generation?.product_visual_prompt}
-                                            </p>
-                                        </div>
-                                        <div className="p-3 bg-gray-50 rounded-xl border border-gray-100">
-                                            <div className="text-xs font-bold text-gray-400 uppercase mb-2">Before / After</div>
-                                            <p className="text-xs text-gray-600 font-mono leading-relaxed select-all">
-                                                {result.image_generation?.before_after_prompt}
-                                            </p>
-                                        </div>
                                     </div>
                                 </AnalysisCard>
                             </div>
