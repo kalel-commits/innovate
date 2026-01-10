@@ -65,7 +65,7 @@ export default function SmartScan() {
                 <div className="text-center">
                     <h1 className="text-4xl font-extrabold text-brand-brown mb-4">Smart Scan AI Analysis</h1>
                     <p className="text-brand-brown/60 max-w-2xl mx-auto">
-                        Upload a photo of your waste to instantly identify materials, estimate value, and get eco-friendly conversion ideas.
+                        Upload a photo of your waste to instantly identify materials, estimate value, and discover eco-friendly conversion ideas.
                     </p>
                 </div>
 
@@ -147,36 +147,66 @@ export default function SmartScan() {
                 {result && (
                     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
                         {/* Top Summary Cards */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            {/* Material Card - Enhanced */}
                             <div className="bg-gradient-to-br from-brand-red to-orange-500 rounded-2xl p-6 text-white shadow-lg">
-                                <div className="flex items-center gap-2 opacity-90 mb-1">
+                                <div className="flex items-center gap-2 opacity-90 mb-2">
                                     <Recycle className="w-5 h-5" />
-                                    <span className="text-sm font-bold uppercase tracking-wider">Material</span>
+                                    <span className="text-sm font-bold uppercase tracking-wider">Detected Materials</span>
                                 </div>
-                                <div className="text-3xl font-extrabold">{result.waste_analysis?.detected_items?.[0]?.material_type || "Unknown"}</div>
-                                <div className="text-white/80 mt-1">{result.waste_analysis?.detected_items?.[0]?.specific_object}</div>
+                                <div className="space-y-2">
+                                    {result.waste_analysis?.detected_items?.slice(0, 2).map((item, idx) => (
+                                        <div key={idx} className={idx > 0 ? "text-sm opacity-90" : ""}>
+                                            <div className={idx === 0 ? "text-2xl font-extrabold" : "text-lg font-bold"}>
+                                                {item.material_type}
+                                            </div>
+                                            <div className="text-white/80 text-xs">
+                                                {item.specific_object}
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {result.waste_analysis?.detected_items?.length > 2 && (
+                                        <div className="text-xs text-white/70 mt-1">
+                                            +{result.waste_analysis.detected_items.length - 2} more items
+                                        </div>
+                                    )}
+                                </div>
                             </div>
 
+                            {/* Scrap Dealer Value (Bhangar Wale) */}
+                            <div className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl p-6 text-white shadow-lg">
+                                <div className="flex items-center gap-2 opacity-90 mb-1">
+                                    <DollarSign className="w-5 h-5" />
+                                    <span className="text-sm font-bold uppercase tracking-wider">Scrap Value</span>
+                                </div>
+                                <div className="text-3xl font-extrabold">
+                                    ₹{result.quantity_estimation?.approximate_market_value || "0"}
+                                </div>
+                                <div className="text-xs text-white/80 mt-1">If sold to bhangar wale</div>
+                            </div>
+
+                            {/* Conversion Value */}
+                            <div className="bg-white rounded-2xl p-6 shadow-sm border-2 border-brand-green/30">
+                                <div className="flex items-center gap-2 text-brand-green/80 mb-1">
+                                    <DollarSign className="w-5 h-5" />
+                                    <span className="text-sm font-bold uppercase tracking-wider">Conversion Value</span>
+                                </div>
+                                <div className="text-3xl font-extrabold text-brand-green">
+                                    ₹{result.conversion_options?.[0]?.estimated_market_value_inr || "0"}
+                                </div>
+                                <div className="text-xs text-brand-brown/60 mt-1">Best conversion option</div>
+                            </div>
+
+                            {/* Sustainability Score */}
                             <div className="bg-white rounded-2xl p-6 shadow-sm border border-brand-brown/10">
                                 <div className="flex items-center gap-2 text-brand-brown/60 mb-1">
                                     <Leaf className="w-5 h-5" />
-                                    <span className="text-sm font-bold uppercase tracking-wider">Sustainability Score</span>
+                                    <span className="text-sm font-bold uppercase tracking-wider">Eco Score</span>
                                 </div>
                                 <div className="text-3xl font-extrabold text-brand-green">
                                     {result.environmental_impact?.sustainability_score || 0}/100
                                 </div>
-                                <div className="text-xs text-brand-brown/60 mt-1">Based on potential impact</div>
-                            </div>
-
-                            <div className="bg-white rounded-2xl p-6 shadow-sm border border-brand-brown/10">
-                                <div className="flex items-center gap-2 text-brand-brown/60 mb-1">
-                                    <DollarSign className="w-5 h-5" />
-                                    <span className="text-sm font-bold uppercase tracking-wider">Est. Value</span>
-                                </div>
-                                <div className="text-3xl font-extrabold text-brand-brown">
-                                    ₹{result.quantity_estimation?.approximate_market_value || "0"}
-                                </div>
-                                <div className="text-xs text-brand-brown/60 mt-1">Market estimate</div>
+                                <div className="text-xs text-brand-brown/60 mt-1">Environmental impact</div>
                             </div>
                         </div>
 
@@ -184,23 +214,53 @@ export default function SmartScan() {
                             {/* Left Column: Analysis Details */}
                             <div className="space-y-6">
                                 <AnalysisCard title="Quality Assessment">
+                                    {/* Reusability Score - Highlighted */}
+                                    <div className="bg-gradient-to-r from-brand-green/10 to-brand-blue/10 rounded-xl p-4 mb-4 border border-brand-green/20">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <span className="text-sm font-bold text-brand-brown/80">Reusability Potential</span>
+                                            <span className="text-2xl font-extrabold text-brand-green">
+                                                {(result.quality_assessment?.reusability_score * 100).toFixed(0)}%
+                                            </span>
+                                        </div>
+                                        <div className="w-full bg-white rounded-full h-3 overflow-hidden shadow-inner">
+                                            <div 
+                                                className="bg-gradient-to-r from-brand-green to-brand-blue h-3 rounded-full transition-all duration-1000 ease-out"
+                                                style={{ width: `${(result.quality_assessment?.reusability_score * 100).toFixed(0)}%` }}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Condition Details Grid */}
                                     <div className="grid grid-cols-2 gap-4">
-                                        <div className="p-3 bg-brand-cream/30 rounded-xl">
-                                            <div className="text-xs text-brand-brown/60 font-bold uppercase">Condition</div>
-                                            <div className="font-medium text-brand-brown capitalize">{result.quality_assessment?.cleanliness_level?.replace('_', ' ')}</div>
+                                        <div className="bg-white border-2 border-brand-cream rounded-xl p-4 hover:border-brand-orange/30 transition-colors">
+                                            <div className="text-xs text-brand-brown/50 font-bold uppercase mb-1">Cleanliness</div>
+                                            <div className="text-lg font-bold text-brand-brown capitalize">
+                                                {result.quality_assessment?.cleanliness_level?.replace(/_/g, ' ') || 'N/A'}
+                                            </div>
                                         </div>
-                                        <div className="p-3 bg-brand-cream/30 rounded-xl">
-                                            <div className="text-xs text-brand-brown/60 font-bold uppercase">Damage</div>
-                                            <div className="font-medium text-brand-brown capitalize">{result.quality_assessment?.damage_level?.replace('_', ' ')}</div>
+                                        <div className="bg-white border-2 border-brand-cream rounded-xl p-4 hover:border-brand-red/30 transition-colors">
+                                            <div className="text-xs text-brand-brown/50 font-bold uppercase mb-1">Damage Level</div>
+                                            <div className="text-lg font-bold text-brand-brown capitalize">
+                                                {result.quality_assessment?.damage_level?.replace(/_/g, ' ') || 'N/A'}
+                                            </div>
                                         </div>
-                                        <div className="p-3 bg-brand-cream/30 rounded-xl">
-                                            <div className="text-xs text-brand-brown/60 font-bold uppercase">Reusability</div>
-                                            <div className="font-medium text-brand-brown">{(result.quality_assessment?.reusability_score * 100).toFixed(0)}%</div>
-                                        </div>
-                                        <div className="p-3 bg-brand-cream/30 rounded-xl">
-                                            <div className="text-xs text-brand-brown/60 font-bold uppercase">Weight/Vol</div>
-                                            <div className="font-medium text-brand-brown">
-                                                {result.quantity_estimation?.approximate_weight_kg}kg / {result.quantity_estimation?.volume_estimate_liters}L
+                                    </div>
+
+                                    {/* Quantity Details */}
+                                    <div className="mt-4 bg-brand-cream/30 rounded-xl p-4">
+                                        <div className="text-xs text-brand-brown/60 font-bold uppercase mb-3">Estimated Quantity</div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <div className="text-sm text-brand-brown/60">Weight</div>
+                                                <div className="text-xl font-bold text-brand-brown">
+                                                    {result.quantity_estimation?.approximate_weight_kg || '0'} kg
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <div className="text-sm text-brand-brown/60">Volume</div>
+                                                <div className="text-xl font-bold text-brand-brown">
+                                                    {result.quantity_estimation?.volume_estimate_liters || '0'} L
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -233,7 +293,7 @@ export default function SmartScan() {
                             {/* Right Column: Conversion Options */}
                             <div className="space-y-6">
                                 <AnalysisCard title="Conversion Ideas">
-                                    <p className="text-sm text-brand-brown/60 mb-4">Click on any product to see detailed information</p>
+                                    <p className="text-sm text-brand-brown/60 mb-4">Explore creative ways to repurpose your waste</p>
                                     <div className="grid grid-cols-1 gap-4">
                                         {result.conversion_options?.map((option, idx) => (
                                             <ProductCard 

@@ -1,8 +1,9 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const API_KEY = "AIzaSyAeER_-61JB6UHEJj2uZD_fQ5Mt_ji5PpY"; // User provided key
+const API_KEY = "AIzaSyA2B7PSMBk9XJtCkmsACJc9Qyx7b_7Wn18"; // User provided key
 const genAI = new GoogleGenerativeAI(API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+const imageModel = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp-image-generation" });
 
 const SYSTEM_PROMPT = `
 You are an advanced AI system designed for a waste-to-value marketplace platform that helps REGULAR PEOPLE transform their waste into PRACTICAL, EVERYDAY USEFUL ITEMS.
@@ -207,6 +208,95 @@ IMPORTANT RULES
 `;
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Generate an image using Gemini's image generation capabilities
+ * @param {string} prompt - Detailed text prompt for image generation
+ * @returns {Promise<string>} - Base64 encoded image data URL
+ */
+export async function generateImageWithGemini(prompt) {
+    const maxRetries = 3;
+    let attempt = 0;
+
+    while (attempt < maxRetries) {
+        try {
+            console.log('🎨 Generating image with Gemini, prompt length:', prompt.length);
+            console.log('🔧 Using model: gemini-2.0-flash-exp-image-generation');
+            
+            // Use Gemini image generation model
+            const result = await imageModel.generateContent([prompt]);
+
+            console.log('📥 Received response from Gemini');
+            const response = await result.response;
+            console.log('📊 Response object keys:', Object.keys(response));
+            console.log('📊 Response candidates:', response.candidates?.length);
+            
+            // Check if response contains image data
+            if (response.candidates && response.candidates[0]) {
+                const candidate = response.candidates[0];
+                console.log('📊 Candidate content parts:', candidate.content?.parts?.length);
+                
+                // Extract image from response
+                if (candidate.content && candidate.content.parts) {
+                    for (const part of candidate.content.parts) {
+                        console.log('📊 Part type:', part.inlineData ? 'inlineData' : part.text ? 'text' : 'unknown');
+                        
+                        if (part.inlineData) {
+                            // Return as data URL
+                            const mimeType = part.inlineData.mimeType || 'image/png';
+                            const imageData = part.inlineData.data;
+                            console.log('✅ Image generated successfully!');
+                            console.log('📊 Image size (base64):', imageData.length, 'characters');
+                            console.log('📊 MIME type:', mimeType);
+                            return `data:${mimeType};base64,${imageData}`;
+                        }
+                        
+                        if (part.text) {
+                            console.log('⚠️ Received text instead of image:', part.text.substring(0, 200));
+                        }
+                    }
+                }
+            }
+
+            // If no image in response, throw error to trigger retry/fallback
+            console.error('❌ No image data found in Gemini response');
+            console.error('Full response structure:', JSON.stringify(response, null, 2).substring(0, 500));
+            throw new Error('No image data in Gemini response');
+
+        } catch (error) {
+            console.error(`❌ Gemini Image Generation Error (Attempt ${attempt + 1}/${maxRetries}):`, error.message);
+            console.error('Error type:', error.constructor.name);
+            console.error('Error status:', error.status);
+            console.error('Error details:', error);
+
+            // Handle rate limiting and service issues
+            if (error.message.includes("429") || error.status === 429 || 
+                error.message.includes("503") || error.status === 503) {
+                attempt++;
+                if (attempt < maxRetries) {
+                    const waitTime = 2000 * Math.pow(2, attempt);
+                    console.log(`⏳ Service overloaded. Retrying image generation in ${waitTime}ms...`);
+                    await delay(waitTime);
+                    continue;
+                }
+            }
+
+            // For other errors or exhausted retries, throw
+            if (attempt === maxRetries) {
+                throw new Error('Failed to generate image after multiple attempts: ' + error.message);
+            }
+            
+            attempt++;
+            if (attempt < maxRetries) {
+                console.log(`⏳ Retrying in 1 second...`);
+                await delay(1000);
+                continue;
+            }
+            
+            throw error;
+        }
+    }
+}
 
 export async function analyzeWasteImage(base64Image) {
     const maxRetries = 3;

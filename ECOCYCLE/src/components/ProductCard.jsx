@@ -1,96 +1,57 @@
-import React, { useState, useEffect } from 'react';
-import { Loader2, ChevronDown, ChevronUp } from 'lucide-react';
-import { fetchProductImage } from '../services/googleImageService';
+import React, { useState } from 'react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
-export default function ProductCard({ option, index, onImageLoad }) {
-    const [imageUrl, setImageUrl] = useState(null);
-    const [imageLoading, setImageLoading] = useState(true);
-    const [imageError, setImageError] = useState(false);
+export default function ProductCard({ option, index }) {
     const [expanded, setExpanded] = useState(false);
-
-    useEffect(() => {
-        loadImage();
-    }, [option.product_name]);
-
-    const loadImage = async () => {
-        setImageLoading(true);
-        setImageError(false);
-        try {
-            const url = await fetchProductImage(option.product_name);
-            setImageUrl(url);
-            if (onImageLoad) {
-                onImageLoad(option.product_name, url);
-            }
-        } catch (error) {
-            console.error('Failed to load image:', error);
-            setImageError(true);
-        } finally {
-            setImageLoading(false);
-        }
-    };
 
     return (
         <div className="bg-white rounded-2xl shadow-sm border border-brand-brown/10 overflow-hidden hover:shadow-lg transition-all duration-300">
-            {/* Image Section */}
+            {/* Header Section - Replaces Image */}
             <div 
-                className="relative h-48 bg-brand-cream/30 cursor-pointer group"
+                className="relative bg-gradient-to-br from-brand-cream to-brand-cream/50 cursor-pointer group p-6 border-b border-brand-brown/10"
                 onClick={() => setExpanded(!expanded)}
             >
-                {imageLoading ? (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                        <Loader2 className="w-8 h-8 text-brand-red animate-spin" />
+                <div className="flex items-start justify-between gap-4">
+                    {/* Number badge */}
+                    <div className="flex-shrink-0 w-10 h-10 rounded-full bg-brand-red text-white flex items-center justify-center font-bold text-lg shadow-lg">
+                        {index + 1}
                     </div>
-                ) : imageError ? (
-                    <div className="absolute inset-0 flex items-center justify-center bg-brand-cream">
-                        <div className="text-center p-4">
-                            <div className="text-4xl mb-2">🎨</div>
-                            <p className="text-sm text-brand-brown/60 font-medium">{option.product_name}</p>
+                    
+                    <div className="flex-1">
+                        <h4 className="font-bold text-brand-brown text-xl mb-1">{option.product_name}</h4>
+                        <div className="flex items-center gap-2">
+                            <span className="px-3 py-1 bg-white rounded-full text-xs font-bold text-brand-brown uppercase shadow-sm border border-brand-brown/10">
+                                {option.conversion_type}
+                            </span>
                         </div>
                     </div>
-                ) : (
-                    <img 
-                        src={imageUrl} 
-                        alt={option.product_name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        onError={() => setImageError(true)}
-                    />
-                )}
-                
-                {/* Overlay with product name */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <div className="absolute bottom-0 left-0 right-0 p-4">
-                        <div className="flex items-center justify-between text-white">
-                            <span className="text-sm font-bold">Click to view details</span>
-                            {expanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-                        </div>
+
+                    {/* Expand/Collapse Icon */}
+                    <div className="flex-shrink-0 text-brand-brown/60 group-hover:text-brand-red transition-colors">
+                        {expanded ? <ChevronUp className="w-6 h-6" /> : <ChevronDown className="w-6 h-6" />}
                     </div>
-                </div>
-
-                {/* Number badge */}
-                <div className="absolute top-3 left-3 w-8 h-8 rounded-full bg-brand-red text-white flex items-center justify-center font-bold text-sm shadow-lg">
-                    {index + 1}
-                </div>
-
-                {/* Conversion type badge */}
-                <div className="absolute top-3 right-3 px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-xs font-bold text-brand-brown uppercase shadow-sm">
-                    {option.conversion_type}
                 </div>
             </div>
 
-            {/* Product Info - Always Visible */}
-            <div className="p-4">
-                <h4 className="font-bold text-brand-brown text-lg mb-2">{option.product_name}</h4>
-                
-                {/* Quick Stats */}
+            {/* Quick Stats in Header */}
+            <div className="px-6 py-3 bg-white border-b border-brand-brown/10">
                 <div className="flex items-center gap-4 text-sm">
-                    <span className="text-brand-green font-bold">₹{option.expected_profit_or_loss_inr}</span>
-                    <span className="text-brand-brown/50">|</span>
-                    <span className="text-brand-orange capitalize">{option.difficulty_level}</span>
+                    <div className="flex items-center gap-1">
+                        <span className="text-brand-brown/50 text-xs">Profit:</span>
+                        <span className="text-brand-green font-bold">₹{option.expected_profit_or_loss_inr}</span>
+                    </div>
+                    <span className="text-brand-brown/20">|</span>
+                    <div className="flex items-center gap-1">
+                        <span className="text-brand-brown/50 text-xs">Difficulty:</span>
+                        <span className="text-brand-orange capitalize font-medium">{option.difficulty_level}</span>
+                    </div>
                 </div>
+            </div>
 
-                {/* Expanded Details */}
-                {expanded && (
-                    <div className="mt-4 pt-4 border-t border-brand-brown/10 space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
+            {/* Expanded Details */}
+            {expanded && (
+                <div className="px-6 pb-6">
+                    <div className="pt-4 space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
                         {/* Daily Use Case - Highlighted */}
                         {option.daily_use_case && (
                             <div className="bg-brand-orange/10 rounded-lg p-3 border border-brand-orange/20">
@@ -152,8 +113,8 @@ export default function ProductCard({ option, index, onImageLoad }) {
                             </div>
                         )}
                     </div>
-                )}
-            </div>
+                </div>
+            )}
         </div>
     );
 }
