@@ -1,17 +1,32 @@
 import React, { useState } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, CheckCircle2, Circle } from 'lucide-react';
 
-export default function ProductCard({ option, index }) {
+export default function ProductCard({ option, index, isSelected, onToggleSelect }) {
     const [expanded, setExpanded] = useState(false);
 
     return (
-        <div className="bg-white rounded-2xl shadow-sm border border-brand-brown/10 overflow-hidden hover:shadow-lg transition-all duration-300">
+        <div className={`bg-white rounded-2xl shadow-sm border-2 overflow-hidden hover:shadow-lg transition-all duration-300 ${isSelected ? 'border-brand-green ring-2 ring-brand-green/20' : 'border-brand-brown/10'}`}>
             {/* Header Section - Replaces Image */}
             <div 
-                className="relative bg-gradient-to-br from-brand-cream to-brand-cream/50 cursor-pointer group p-6 border-b border-brand-brown/10"
+                className={`relative cursor-pointer group p-6 border-b border-brand-brown/10 transition-colors ${isSelected ? 'bg-gradient-to-br from-brand-green/10 to-brand-green/5' : 'bg-gradient-to-br from-brand-cream to-brand-cream/50'}`}
                 onClick={() => setExpanded(!expanded)}
             >
                 <div className="flex items-start justify-between gap-4">
+                    {/* Selection Checkbox */}
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onToggleSelect(option);
+                        }}
+                        className="flex-shrink-0 hover:scale-110 transition-transform"
+                    >
+                        {isSelected ? (
+                            <CheckCircle2 className="w-8 h-8 text-brand-green fill-brand-green/20" />
+                        ) : (
+                            <Circle className="w-8 h-8 text-brand-brown/30 hover:text-brand-green" />
+                        )}
+                    </button>
+                    
                     {/* Number badge */}
                     <div className="flex-shrink-0 w-10 h-10 rounded-full bg-brand-red text-white flex items-center justify-center font-bold text-lg shadow-lg">
                         {index + 1}

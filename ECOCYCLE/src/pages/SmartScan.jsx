@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { analyzeWasteImage } from '../services/gemini';
-import { Upload, Camera, Loader2, ArrowRight, Leaf, DollarSign, Recycle, AlertCircle } from 'lucide-react';
+import { Upload, Camera, Loader2, ArrowRight, Leaf, DollarSign, Recycle, AlertCircle, CheckCircle, Save } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
+import { saveSelectedIdeas } from '../services/savedIdeasService';
+import { useAuth } from '../context/AuthContext';
 
 export default function SmartScan() {
     const [image, setImage] = useState(null);
@@ -10,7 +12,10 @@ export default function SmartScan() {
     const [analyzing, setAnalyzing] = useState(false);
     const [result, setResult] = useState(null);
     const [error, setError] = useState('');
+    const [selectedIdeas, setSelectedIdeas] = useState([]);
+    const [saving, setSaving] = useState(false);
     const navigate = useNavigate();
+    const { currentUser } = useAuth();
 
     const handleImageUpload = (e) => {
         const file = e.target.files[0];
@@ -47,6 +52,45 @@ export default function SmartScan() {
             setError(err.message || 'Failed to analyze image. Please try again.');
         } finally {
             setAnalyzing(false);
+        }
+    };
+
+    const handleToggleSelect = (idea) => {
+        setSelectedIdeas(prev => {
+            const isAlreadySelected = prev.some(item => item.product_name === idea.product_name);
+            if (isAlreadySelected) {
+                return prev.filter(item => item.product_name !== idea.product_name);
+            } else {
+                return [...prev, idea];
+            }
+        });
+    };
+
+    const handleConfirmSelection = async () => {
+        if (selectedIdeas.length === 0) {
+            setError('Please select at least one conversion idea to save.');
+            return;
+        }
+
+        if (!currentUser) {
+            setError('You must be logged in to save ideas.');
+            return;
+        }
+
+        setSaving(true);
+        setError('');
+        
+        try {
+            await saveSelectedIdeas(currentUser.uid, selectedIdeas, result);
+            // Redirect to dashboard
+            navigate('/dashboard', { 
+                state: { 
+                    message: `Successfully saved ${selectedIdeas.length} conversion idea${selectedIdeas.length > 1 ? 's' : ''}!` 
+                } 
+            });
+        } catch (err) {
+            setError(err.message || 'Failed to save ideas. Please try again.');
+            setSaving(false);
         }
     };
 
@@ -293,13 +337,22 @@ export default function SmartScan() {
                             {/* Right Column: Conversion Options */}
                             <div className="space-y-6">
                                 <AnalysisCard title="Conversion Ideas">
-                                    <p className="text-sm text-brand-brown/60 mb-4">Explore creative ways to repurpose your waste</p>
+                                    <div className="flex items-center justify-between mb-4">
+                                        <p className="text-sm text-brand-brown/60">Select ideas you like and save them</p>
+                                        {selectedIdeas.length > 0 && (
+                                            <span className="px-3 py-1 bg-brand-green/10 text-brand-green text-sm font-bold rounded-full">
+                                                {selectedIdeas.length} selected
+                                            </span>
+                                        )}
+                                    </div>
                                     <div className="grid grid-cols-1 gap-4">
                                         {result.conversion_options?.map((option, idx) => (
                                             <ProductCard 
                                                 key={idx} 
                                                 option={option} 
                                                 index={idx}
+                                                isSelected={selectedIdeas.some(item => item.product_name === option.product_name)}
+                                                onToggleSelect={handleToggleSelect}
                                             />
                                         ))}
                                     </div>
@@ -307,9 +360,29 @@ export default function SmartScan() {
                             </div>
                         </div>
 
-                        <div className="flex justify-center pt-8">
+                        {/* Action Buttons */}
+                        <div className="flex flex-col sm:flex-row justify-center gap-4 pt-8">
+                            {selectedIdeas.length > 0 && (
+                                <button
+                                    onClick={handleConfirmSelection}
+                                    disabled={saving}
+                                    className="px-8 py-4 bg-brand-green text-white rounded-xl font-bold hover:bg-green-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-brand-green/25 flex items-center justify-center gap-2"
+                                >
+                                    {saving ? (
+                                        <>
+                                            <Loader2 className="w-5 h-5 animate-spin" />
+                                            Saving...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Save className="w-5 h-5" />
+                                            Save {selectedIdeas.length} Idea{selectedIdeas.length > 1 ? 's' : ''}
+                                        </>
+                                    )}
+                                </button>
+                            )}
                             <button
-                                onClick={() => { setResult(null); setImage(null); setPreview(null); }}
+                                onClick={() => { setResult(null); setImage(null); setPreview(null); setSelectedIdeas([]); }}
                                 className="px-8 py-3 bg-white border border-brand-brown/20 rounded-xl font-bold text-brand-brown hover:bg-brand-cream transition-colors shadow-sm"
                             >
                                 Analyze Another Item

@@ -1,17 +1,21 @@
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { BarChart3, Leaf, Recycle, MapPin, LogOut, User, Phone, Mail, X, Scan } from 'lucide-react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { BarChart3, Leaf, Recycle, MapPin, LogOut, User, Phone, Mail, X, Scan, CheckCircle2, TrendingUp, ChevronDown } from 'lucide-react';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { getFirestore, doc, updateDoc, getDoc } from 'firebase/firestore';
 import { auth } from '../firebase'; // Ensure we import auth to get the app for firestore
+import { getUserSavedIdeas } from '../services/savedIdeasService';
 
 export default function Dashboard() {
     const { currentUser, logout } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
     const [userData, setUserData] = useState(null);
     const [showPhoneModal, setShowPhoneModal] = useState(false);
     const [newPhone, setNewPhone] = useState('');
     const [loading, setLoading] = useState(false);
+    const [savedIdeas, setSavedIdeas] = useState([]);
+    const [successMessage, setSuccessMessage] = useState('');
     const db = getFirestore(auth.app);
 
     useEffect(() => {
@@ -26,10 +30,27 @@ export default function Dashboard() {
                         setShowPhoneModal(true);
                     }
                 }
+                
+                // Fetch saved ideas
+                try {
+                    const ideas = await getUserSavedIdeas(currentUser.uid);
+                    setSavedIdeas(ideas);
+                } catch (error) {
+                    console.error('Error fetching saved ideas:', error);
+                }
             }
         }
         fetchUserData();
-    }, [currentUser, db]);
+        
+        // Check for success message from navigation state
+        if (location.state?.message) {
+            setSuccessMessage(location.state.message);
+            // Clear the message after 5 seconds
+            setTimeout(() => setSuccessMessage(''), 5000);
+            // Clear the navigation state
+            window.history.replaceState({}, document.title);
+        }
+    }, [currentUser, db, location]);
 
     async function handleLogout() {
         try {
@@ -214,26 +235,189 @@ export default function Dashboard() {
                     </div>
                 </div>
 
-                {/* Recent Activity Placeholder */}
+                {/* Success Message */}
+                {successMessage && (
+                    <div className="bg-brand-green/10 border-2 border-brand-green rounded-xl p-4 mb-6 flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+                        <CheckCircle2 className="w-6 h-6 text-brand-green flex-shrink-0" />
+                        <p className="text-brand-green font-bold">{successMessage}</p>
+                    </div>
+                )}
+
+                {/* My Recycling / Saved Ideas */}
                 <div className="bg-white rounded-xl border border-brand-brown/10 shadow-sm p-6">
-                    <h2 className="text-lg font-bold text-brand-black mb-6">Recent Activity</h2>
-                    <div className="space-y-6">
-                        {[1, 2, 3].map((item) => (
-                            <div key={item} className="flex items-center gap-4 border-b border-brand-brown/5 last:border-0 pb-4 last:pb-0">
-                                <div className="w-12 h-12 bg-brand-cream rounded-lg flex items-center justify-center text-brand-brown">
-                                    <Recycle className="w-6 h-6" />
+                    <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-lg font-bold text-brand-black">My Recycling History</h2>
+                        <span className="px-3 py-1 bg-brand-green/10 text-brand-green text-sm font-bold rounded-full">
+                            {savedIdeas.length} saved
+                        </span>
+                    </div>
+                    
+                    {savedIdeas.length === 0 ? (
+                        <div className="text-center py-12">
+                            <div className="w-16 h-16 bg-brand-cream rounded-full flex items-center justify-center mx-auto mb-4 text-brand-brown/50">
+                                <Recycle className="w-8 h-8" />
+                            </div>
+                            <p className="text-brand-brown/60 mb-2">No saved ideas yet</p>
+                            <p className="text-sm text-brand-brown/50">Start by analyzing waste and saving conversion ideas!</p>
+                            <Link to="/smart-scan" className="inline-block mt-4 px-6 py-2 bg-brand-red text-white font-bold rounded-lg hover:bg-brand-brown transition-colors">
+                                Start Smart Scan
+                            </Link>
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            {savedIdeas.map((record) => (
+                                <SavedIdeaCard key={record.id} record={record} />
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+            </main>
+        </div>
+    );
+}
+
+function SavedIdeaCard({ record }) {
+    const [expanded, setExpanded] = React.useState(false);
+
+    return (
+        <div className="border border-brand-brown/10 rounded-xl overflow-hidden hover:shadow-md transition-shadow">
+            {/* Header - Always Visible */}
+            <div 
+                className="p-4 cursor-pointer hover:bg-brand-cream/30 transition-colors"
+                onClick={() => setExpanded(!expanded)}
+            >
+                <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-brand-red to-orange-500 rounded-lg flex items-center justify-center text-white flex-shrink-0">
+                        <Recycle className="w-6 h-6" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                            <div>
+                                <h3 className="font-bold text-brand-black">
+                                    {record.analysisData.material_type}
+                                </h3>
+                                <p className="text-sm text-brand-brown/70">
+                                    {record.analysisData.specific_object}
+                                </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="px-2 py-1 bg-brand-green/10 text-brand-green text-xs font-bold rounded-full whitespace-nowrap">
+                                    {record.selectedIdeas.length} idea{record.selectedIdeas.length > 1 ? 's' : ''}
+                                </span>
+                                <ChevronDown className={`w-5 h-5 text-brand-brown/60 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+                            </div>
+                        </div>
+                        
+                        {/* Stats */}
+                        <div className="flex items-center gap-4 text-xs text-brand-brown/60">
+                            <div className="flex items-center gap-1">
+                                <TrendingUp className="w-3 h-3" />
+                                <span>Scrap: ₹{record.analysisData.scrap_value}</span>
+                            </div>
+                            <span>•</span>
+                            <span>{new Date(record.createdAt).toLocaleDateString('en-IN', { 
+                                day: 'numeric', 
+                                month: 'short',
+                                year: 'numeric'
+                            })}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Expanded Details */}
+            {expanded && (
+                <div className="border-t border-brand-brown/10 bg-brand-cream/20 p-4">
+                    <div className="space-y-4">
+                        {record.selectedIdeas.map((idea, idx) => (
+                            <div key={idx} className="bg-white rounded-xl p-4 border border-brand-brown/10">
+                                {/* Idea Header */}
+                                <div className="flex items-start justify-between mb-3">
+                                    <div className="flex-1">
+                                        <h4 className="font-bold text-brand-brown text-lg mb-1">{idea.product_name}</h4>
+                                        <span className="px-2 py-1 bg-brand-orange/10 text-brand-orange text-xs font-bold rounded-full uppercase">
+                                            {idea.conversion_type}
+                                        </span>
+                                    </div>
+                                    <div className="text-right">
+                                        <div className="text-xs text-brand-brown/60">Profit</div>
+                                        <div className="text-xl font-bold text-brand-green">₹{idea.expected_profit_or_loss_inr}</div>
+                                    </div>
                                 </div>
-                                <div className="flex-1">
-                                    <div className="font-bold text-brand-black">Recycled Plastic Bottles</div>
-                                    <div className="text-sm text-brand-brown font-medium">2 hours ago • Verified by GreenBin Vendor</div>
+
+                                {/* Daily Use Case */}
+                                {idea.daily_use_case && (
+                                    <div className="bg-brand-orange/10 rounded-lg p-3 mb-3 border border-brand-orange/20">
+                                        <div className="text-xs font-bold text-brand-orange uppercase mb-1">💡 Daily Use</div>
+                                        <p className="text-sm text-brand-brown">{idea.daily_use_case}</p>
+                                    </div>
+                                )}
+
+                                {/* Processing Required */}
+                                <div className="mb-3">
+                                    <div className="text-xs font-bold text-brand-brown/60 uppercase mb-1">Processing Required</div>
+                                    <p className="text-sm text-brand-brown">{idea.required_processing}</p>
                                 </div>
-                                <div className="font-bold text-brand-red">+50 pts</div>
+
+                                {/* Materials */}
+                                {idea.materials_needed && (
+                                    <div className="mb-3">
+                                        <div className="text-xs font-bold text-brand-brown/60 uppercase mb-1">📦 Materials Needed</div>
+                                        <p className="text-sm text-brand-brown">{idea.materials_needed}</p>
+                                    </div>
+                                )}
+
+                                {/* Customer Can Provide */}
+                                {idea.customer_can_provide && (
+                                    <div className="bg-brand-green/10 rounded-lg p-2 mb-3 border border-brand-green/20">
+                                        <div className="text-xs font-bold text-brand-green uppercase mb-1">✓ You Can Provide</div>
+                                        <p className="text-sm text-brand-brown">{idea.customer_can_provide}</p>
+                                    </div>
+                                )}
+
+                                {/* Vendor Can Provide */}
+                                {idea.vendor_can_provide && (
+                                    <div className="bg-brand-red/10 rounded-lg p-2 mb-3 border border-brand-red/20">
+                                        <div className="text-xs font-bold text-brand-red uppercase mb-1">🏪 Vendor Can Provide</div>
+                                        <p className="text-sm text-brand-brown">{idea.vendor_can_provide}</p>
+                                    </div>
+                                )}
+
+                                {/* Cost Breakdown */}
+                                <div className="grid grid-cols-3 gap-3 mb-3">
+                                    <div className="bg-brand-cream/50 rounded-lg p-2 text-center">
+                                        <div className="text-xs font-bold text-brand-brown/60 uppercase">Cost</div>
+                                        <div className="text-sm font-bold text-brand-brown">₹{idea.estimated_conversion_cost_inr}</div>
+                                    </div>
+                                    <div className="bg-brand-cream/50 rounded-lg p-2 text-center">
+                                        <div className="text-xs font-bold text-brand-brown/60 uppercase">Value</div>
+                                        <div className="text-sm font-bold text-brand-brown">₹{idea.estimated_market_value_inr}</div>
+                                    </div>
+                                    <div className="bg-brand-cream/50 rounded-lg p-2 text-center">
+                                        <div className="text-xs font-bold text-brand-brown/60 uppercase">Difficulty</div>
+                                        <div className="text-sm font-bold text-brand-orange capitalize">{idea.difficulty_level}</div>
+                                    </div>
+                                </div>
+
+                                {/* Feasibility */}
+                                {idea.feasibility_score && (
+                                    <div>
+                                        <div className="text-xs font-bold text-brand-brown/60 uppercase mb-1">Feasibility Score</div>
+                                        <div className="w-full bg-brand-cream/50 rounded-full h-2">
+                                            <div 
+                                                className="bg-brand-green h-2 rounded-full transition-all duration-500"
+                                                style={{ width: `${idea.feasibility_score * 100}%` }}
+                                            />
+                                        </div>
+                                        <div className="text-xs text-brand-brown/60 mt-1">{(idea.feasibility_score * 100).toFixed(0)}% feasible</div>
+                                    </div>
+                                )}
                             </div>
                         ))}
                     </div>
                 </div>
-
-            </main>
+            )}
         </div>
     );
 }
