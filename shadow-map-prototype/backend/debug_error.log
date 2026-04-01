@@ -1,0 +1,26 @@
+
+[2026-02-22 08:20:27.661720] ERROR IN DASHBOARD: name 'intensity' is not defined
+Traceback (most recent call last):
+  File "C:\Users\ajay\Desktop\innovateu4\shadow-map-prototype\backend\app\routes.py", line 104, in get_dashboard_summary
+    risks = [
+            ^
+  File "C:\Users\ajay\Desktop\innovateu4\shadow-map-prototype\backend\app\routes.py", line 105, in <listcomp>
+    RiskAssessmentEngine.assess_infrastructure_risk(inf, env_data, infrastructure_data)
+  File "C:\Users\ajay\Desktop\innovateu4\shadow-map-prototype\backend\app\data_simulator.py", line 160, in assess_infrastructure_risk
+    golden_window = max(0, 30 - int(intensity / 3.3))
+                                    ^^^^^^^^^
+NameError: name 'intensity' is not defined
+--------------------------------------------------
+
+[2026-02-22 08:21:21.739169] ERROR IN DASHBOARD: name 'intensity' is not defined
+Traceback (most recent call last):
+  File "C:\Users\ajay\Desktop\innovateu4\shadow-map-prototype\backend\app\routes.py", line 104, in get_dashboard_summary
+    risks = [
+            ^
+  File "C:\Users\ajay\Desktop\innovateu4\shadow-map-prototype\backend\app\routes.py", line 105, in <listcomp>
+    RiskAssessmentEngine.assess_infrastructure_risk(inf, env_data, infrastructure_data)
+  File "C:\Users\ajay\Desktop\innovateu4\shadow-map-prototype\backend\app\data_simulator.py", line 160, in assess_infrastructure_risk
+    golden_window = max(0, 30 - int(intensity / 3.3))
+                                    ^^^^^^^^^
+NameError: name 'intensity' is not defined
+--------------------------------------------------

@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+    volumes:
+      - ./backend:/app
+    command: python run.py
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+    command: npm run dev
+
+  # Database (optional - for future)
+  # postgres:
+  #   image: postgres:15
+  #   environment:
+  #     - POSTGRES_DB=shadow_map
+  #     - POSTGRES_USER=admin
+  #     - POSTGRES_PASSWORD=password
+  #   ports:
+  #     - "5432:5432"
